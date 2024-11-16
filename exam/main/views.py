@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from .forms import PostEditForm, PostForm, CommentForm, UserLoginForm, UserRegisterForm
 from .models import Post
@@ -83,8 +84,8 @@ def post_edit(request, pk):
     return render(request, "main/post_edit.html", {"form": form, "post": post})
 
 
-def create_comment(request, post_id):
-    post = Post.objects.get(id=post_id)
+def create_comment(request, pk):
+    post = Post.objects.get(pk=pk)
     if request.method == "POST":
         form = CommentForm(request.POST)
         if form.is_valid():
@@ -92,7 +93,7 @@ def create_comment(request, post_id):
             comment.post = post
             comment.author = request.user
             comment.save()
-            return redirect("post_detail", post_id=post.id)
+            return redirect("post_detail", pk=pk)
     else:
         form = CommentForm()
     return render(request, "main/create_comment.html", {"form": form, "post": post})
@@ -163,6 +164,24 @@ def user_login(request):
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
+                # refresh = RefreshToken.for_user(user)
+
+                # response = JsonResponse({'message': 'Login successful.'})
+                # response.set_cookie(
+                #     key='access_token',
+                #     value=str(refresh.access_token),
+                #     httponly=True,
+                #     secure=True,  # Используйте True в продакшене
+                #     samesite='Lax',
+                # )
+                # response.set_cookie(
+                #     key='refresh_token',
+                #     value=str(refresh),
+                #     httponly=True,
+                #     secure=True,  # Используйте True в продакшене
+                #     samesite='Lax',
+                # )
+                
                 return redirect("home")
             else:
                 form.add_error(None, "Invalid username or password")
